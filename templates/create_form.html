@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Create Form</h4>
+                <form id="formBuilder">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Form Title</label>
+                        <input type="text" class="form-control" id="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="wing_id" class="form-label">Select Wing</label>
+                        <select class="form-control" id="wing_id" required>
+                            {% for wing in wings %}
+                            <option value="{{ wing.id }}">{{ wing.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="formFields">
+                        <!-- Form fields will be added here -->
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-secondary" onclick="addField()">Add Field</button>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Create Form</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Field Template -->
+<template id="fieldTemplate">
+    <div class="field-container card mb-3 p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">Form Field</h5>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeField(this)">Remove</button>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Field Label</label>
+            <input type="text" class="form-control field-label" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Field Type</label>
+            <select class="form-control field-type" onchange="handleFieldTypeChange(this)">
+                <option value="text">Text</option>
+                <option value="number">Number</option>
+                <option value="choice">Multiple Choice</option>
+                <option value="checkbox">Checkbox</option>
+            </select>
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input field-required">
+            <label class="form-check-label">Required Field</label>
+        </div>
+        <div class="options-container" style="display: none;">
+            <div class="mb-3">
+                <label class="form-label">Options (one per line)</label>
+                <textarea class="form-control field-options" rows="3"></textarea>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+function addField() {
+    const template = document.getElementById('fieldTemplate');
+    const container = document.getElementById('formFields');
+    const clone = template.content.cloneNode(true);
+    container.appendChild(clone);
+}
+
+function removeField(button) {
+    button.closest('.field-container').remove();
+}
+
+function handleFieldTypeChange(select) {
+    const optionsContainer = select.closest('.field-container').querySelector('.options-container');
+    optionsContainer.style.display = select.value === 'choice' ? 'block' : 'none';
+}
+
+document.getElementById('formBuilder').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const fields = [];
+    document.querySelectorAll('.field-container').forEach(container => {
+        const field = {
+            label: container.querySelector('.field-label').value,
+            type: container.querySelector('.field-type').value,
+            required: container.querySelector('.field-required').checked
+        };
+        
+        if (field.type === 'choice') {
+            field.options = container.querySelector('.field-options').value
+                .split('\n')
+                .map(opt => opt.trim())
+                .filter(opt => opt);
+        }
+        
+        fields.push(field);
+    });
+    
+    const formData = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        wing_id: document.getElementById('wing_id').value,
+        fields: fields
+    };
+    
+    try {
+        const response = await fetch("{{ url_for('create_form') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            window.location.href = "{{ url_for('dashboard') }}";
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while creating the form');
+    }
+});
+</script>
+{% endblock %}

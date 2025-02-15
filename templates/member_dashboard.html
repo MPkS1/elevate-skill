@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Notifications Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Recent Notifications</h4>
+                </div>
+                <div class="card-body">
+                    {% if wing.notifications %}
+                        <div class="list-group">
+                            {% for notification in wing.notifications|sort(attribute='created_at', reverse=true) %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <p class="mb-1">{{ notification.content }}</p>
+                                        <small>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                    <small>From: {{ notification.creator.username }}</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="mb-0">No notifications yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">Share Learning</h4>
+                    <form method="POST" action="{{ url_for('share_learning') }}">
+                        <div class="mb-3">
+                            <label for="content" class="form-label">What did you learn today?</label>
+                            <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Share Learning</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Available Quizzes</h4>
+                    {% if available_quizzes %}
+                    <div class="list-group">
+                        {% for quiz in available_quizzes %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ quiz.title }}</h5>
+                                <small>{{ quiz.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <p class="mb-1">{{ quiz.questions|length }} questions</p>
+                            <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-primary">Take Quiz</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No new quizzes available at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h4 class="card-title">Completed Quizzes</h4>
+                    {% if completed_quizzes %}
+                    <div class="list-group">
+                        {% for quiz in completed_quizzes %}
+                        {% set response = current_user.quiz_responses|selectattr('quiz_id', 'equalto', quiz.id)|first %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ quiz.title }}</h5>
+                                <small>Completed: {{ response.submitted_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <p class="mb-1">Score: {{ response.score }}%</p>
+                            <div class="progress mt-2">
+                                <div class="progress-bar" role="progressbar" style="width: {{ response.score }}%"
+                                     aria-valuenow="{{ response.score }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">You haven't completed any quizzes yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">Today's Learnings</h4>
+                    {% if today_learnings %}
+                    <div class="list-group">
+                        {% for learning in today_learnings %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <small class="text-muted">{{ learning.timestamp.strftime('%H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">{{ learning.content }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No learnings shared today.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

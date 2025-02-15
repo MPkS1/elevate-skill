@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Overall Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Wings</h5>
+                    <p class="display-4">{{ wings|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="display-4">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Learnings</h5>
+                    <p class="display-4">{{ total_learnings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Quizzes</h5>
+                    <p class="display-4">{{ total_quizzes }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="row mb-4">
+        <!-- Create Admin -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Create Admin</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_admin') }}">
+                        <div class="mb-3">
+                            <label for="admin_username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="admin_username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="admin_password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="admin_password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Admin</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Wing Head -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Create Wing Head</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_wing_head') }}">
+                        <div class="mb-3">
+                            <label for="winghead_username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="winghead_username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="winghead_password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="winghead_password" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="winghead_wing" class="form-label">Wing</label>
+                            <select class="form-select" id="winghead_wing" name="wing_id" required>
+                                <option value="">Select Wing</option>
+                                {% for wing in wings %}
+                                <option value="{{ wing.id }}">{{ wing.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Wing Head</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Member -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Create Member</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_member') }}">
+                        <div class="mb-3">
+                            <label for="member_username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="member_username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="member_password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="member_password" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="member_wing" class="form-label">Wing</label>
+                            <select class="form-select" id="member_wing" name="wing_id" required>
+                                <option value="">Select Wing</option>
+                                {% for wing in wings %}
+                                <option value="{{ wing.id }}">{{ wing.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Member</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Wing -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Create New Wing</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_wing') }}">
+                        <div class="mb-3">
+                            <label for="wing_name" class="form-label">Wing Name</label>
+                            <input type="text" class="form-control" id="wing_name" name="name" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Wing</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wing Statistics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Wing Statistics</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Wing Name</th>
+                                    <th>Members</th>
+                                    <th>Learnings</th>
+                                    <th>Quizzes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in wing_stats %}
+                                <tr>
+                                    <td>{{ stat.wing.name }}</td>
+                                    <td>{{ stat.members }}</td>
+                                    <td>{{ stat.learnings }}</td>
+                                    <td>{{ stat.quizzes }}</td>
+                                    <td>
+                                        <a href="{{ url_for('wing_stats', wing_id=stat.wing.id) }}" class="btn btn-sm btn-info">View Details</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

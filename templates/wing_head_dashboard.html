@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Member Statistics -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Member Statistics</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Learnings</th>
+                                    <th>Quizzes</th>
+                                    <th>Avg Score</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in member_stats %}
+                                <tr>
+                                    <td>{{ stat.username }}</td>
+                                    <td>
+                                        {{ stat.learning_count }} learnings
+                                        <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#learnings-{{ loop.index }}">
+                                            View Details
+                                        </button>
+                                        <div class="collapse mt-2" id="learnings-{{ loop.index }}">
+                                            <div class="card card-body">
+                                                {% for learning in stat.learnings %}
+                                                <div class="mb-2">
+                                                    <small class="text-muted">{{ learning.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                                    <p class="mb-1">{{ learning.content }}</p>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{ stat.quiz_count }} quizzes
+                                        <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#quizzes-{{ loop.index }}">
+                                            View Details
+                                        </button>
+                                        <div class="collapse mt-2" id="quizzes-{{ loop.index }}">
+                                            <div class="card card-body">
+                                                {% for response in stat.quiz_responses %}
+                                                <div class="mb-2">
+                                                    <strong>{{ response.quiz.title }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ response.submitted_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                                    <p class="mb-1">Score: {{ response.score }}%</p>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ "%.1f"|format(stat.avg_quiz_score) }}%</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary" onclick="showMemberProgress('{{ stat.username }}')">Full Report</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Quiz -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Create Quiz</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_quiz') }}">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Quiz Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div id="questions-container">
+                            <div class="question-group mb-3">
+                                <label class="form-label">Question 1</label>
+                                <input type="text" class="form-control mb-2" name="questions[]" required>
+                                <label class="form-label">Correct Answer</label>
+                                <input type="text" class="form-control" name="answers[]" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary mb-3" onclick="addQuestion()">Add Question</button>
+                        <button type="submit" class="btn btn-primary">Create Quiz</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Send Notification -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Send Notification</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('send_notification') }}">
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Message</label>
+                            <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Notification</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Statistics -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Quiz Statistics</h4>
+                </div>
+                <div class="card-body">
+                    {% if wing.quizzes %}
+                    <div class="list-group">
+                        {% for quiz in wing.quizzes %}
+                        <div class="list-group-item">
+                            <h5 class="mb-1">{{ quiz.title }}</h5>
+                            {% set responses = quiz.responses %}
+                            {% if responses %}
+                            {% set total_score = namespace(value=0) %}
+                            {% for response in responses %}
+                                {% set total_score.value = total_score.value + response.score %}
+                            {% endfor %}
+                            <p class="mb-1">
+                                Average Score: {{ "%.1f"|format(total_score.value / responses|length) }}%<br>
+                                Total Responses: {{ responses|length }}
+                            </p>
+                            <a href="{{ url_for('quiz_stats', quiz_id=quiz.id) }}" class="btn btn-sm btn-info">View Details</a>
+                            {% else %}
+                            <p class="text-muted mb-0">No responses yet</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No quizzes created yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let questionCount = 1;
+
+function addQuestion() {
+    questionCount++;
+    const container = document.getElementById('questions-container');
+    const questionGroup = document.createElement('div');
+    questionGroup.className = 'question-group mb-3';
+    questionGroup.innerHTML = `
+        <label class="form-label">Question ${questionCount}</label>
+        <input type="text" class="form-control mb-2" name="questions[]" required>
+        <label class="form-label">Correct Answer</label>
+        <input type="text" class="form-control" name="answers[]" required>
+    `;
+    container.appendChild(questionGroup);
+}
+</script>
+{% endblock %}

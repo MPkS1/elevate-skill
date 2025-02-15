@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">{{ wing.name }} - Detailed Statistics</h4>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Role</th>
+                                <th>Today's Learnings</th>
+                                <th>Total Learnings</th>
+                                <th>Quiz Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in member_stats %}
+                            <tr>
+                                <td>{{ stat.username }}</td>
+                                <td><span class="badge {% if stat.role == 'wing_head' %}bg-primary{% else %}bg-secondary{% endif %}">{{ stat.role }}</span></td>
+                                <td>
+                                    {% if stat.today_learnings %}
+                                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#today-{{ loop.index }}">
+                                        View {{ stat.today_learnings|length }} learnings
+                                    </button>
+                                    <div class="collapse" id="today-{{ loop.index }}">
+                                        {% for learning in stat.today_learnings %}
+                                        <div class="card card-body mb-2">
+                                            <small class="text-muted">{{ learning.timestamp.strftime('%H:%M') }}</small>
+                                            {{ learning.content }}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    No learnings today
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stat.all_learnings %}
+                                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#all-{{ loop.index }}">
+                                        View {{ stat.all_learnings|length }} learnings
+                                    </button>
+                                    <div class="collapse" id="all-{{ loop.index }}">
+                                        {% for learning in stat.all_learnings %}
+                                        <div class="card card-body mb-2">
+                                            <small class="text-muted">{{ learning.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                                            {{ learning.content }}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    No learnings
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stat.quiz_responses %}
+                                    <div class="quiz-stats">
+                                        <div class="mb-2">
+                                            <strong>Quizzes Taken:</strong> {{ stat.quiz_responses|length }}
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Average Score:</strong>
+                                            {% set avg_score = (stat.quiz_responses|map(attribute='score')|sum / stat.quiz_responses|map(attribute='total_questions')|sum * 100)|round(1) %}
+                                            <div class="progress">
+                                                <div class="progress-bar {% if avg_score >= 70 %}bg-success{% elif avg_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                     role="progressbar"
+                                                     style="width: {{ avg_score }}%"
+                                                     aria-valuenow="{{ avg_score }}"
+                                                     aria-valuemin="0"
+                                                     aria-valuemax="100"
+                                                     aria-label="Average Score">{{ avg_score }}%</div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#quizzes-{{ loop.index }}">
+                                            View Quiz History
+                                        </button>
+                                        <div class="collapse" id="quizzes-{{ loop.index }}">
+                                            {% for response in stat.quiz_responses %}
+                                            <div class="card card-body mb-2">
+                                                <div class="d-flex justify-content-between">
+                                                    <strong>{{ response.quiz.title }}</strong>
+                                                    <small class="text-muted">{{ response.submitted_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                                </div>
+                                                <div class="progress mt-2">
+                                                    {% set score_percent = (response.score / response.total_questions * 100)|round(1) %}
+                                                    <div class="progress-bar {% if score_percent >= 70 %}bg-success{% elif score_percent >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                         role="progressbar"
+                                                         style="width: {{ score_percent }}%"
+                                                         aria-valuenow="{{ score_percent }}"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100"
+                                                         aria-label="Quiz Score">{{ response.score }}/{{ response.total_questions }} ({{ score_percent }}%)</div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    No quizzes taken
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

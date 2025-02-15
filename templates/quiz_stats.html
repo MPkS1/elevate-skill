@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">Quiz Statistics: {{ quiz.title }}</h3>
+        </div>
+        <div class="card-body">
+            <!-- Overall Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Responses</h5>
+                            <p class="card-text display-4">{{ quiz.responses|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Average Score</h5>
+                            {% if quiz.responses %}
+                            {% set total_score = namespace(value=0) %}
+                            {% for response in quiz.responses %}
+                                {% set total_score.value = total_score.value + response.score %}
+                            {% endfor %}
+                            <p class="card-text display-4">
+                                {{ "%.1f"|format(total_score.value / quiz.responses|length) }}%
+                            </p>
+                            {% else %}
+                            <p class="card-text text-muted">No responses yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Questions</h5>
+                            <p class="card-text display-4">{{ quiz.questions|length }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Response Table -->
+            {% if quiz.responses %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Score</th>
+                            <th>Submitted At</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for response in quiz.responses|sort(attribute='submitted_at', reverse=true) %}
+                        <tr>
+                            <td>{{ response.user.username }}</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar {% if response.score >= 70 %}bg-success{% elif response.score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ response.score }}%" 
+                                        aria-valuenow="{{ response.score }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                        {{ response.score }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ response.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#responseModal{{ response.id }}">
+                                    View Answers
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Response Details Modal -->
+                        <div class="modal fade" id="responseModal{{ response.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Response Details - {{ response.user.username }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% for answer in response.answers %}
+                                        <div class="mb-3">
+                                            <p class="fw-bold mb-1">Question {{ loop.index }}</p>
+                                            <p class="mb-1">{{ answer.question.question_text }}</p>
+                                            <p class="mb-1"><strong>User's Answer:</strong> {{ answer.answer_text }}</p>
+                                            <p class="mb-0"><strong>Correct Answer:</strong> {{ answer.question.correct_answer }}</p>
+                                        </div>
+                                        {% if not loop.last %}<hr>{% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No responses have been submitted for this quiz yet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
