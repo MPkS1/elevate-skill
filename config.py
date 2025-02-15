@@ -9,14 +9,11 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:Mpkumar98&^@db.xnhvhzxfsymkloeujjqn.supabase.co:5432/postgres'
 
 class ProductionConfig(Config):
     DEBUG = False
-    # PostgreSQL database URL format: postgresql://username:password@host:port/database_name
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
-        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:Mpkumar98&^@db.xnhvhzxfsymkloeujjqn.supabase.co:5432/postgres'
 
 config = {
     'development': DevelopmentConfig,

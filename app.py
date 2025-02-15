@@ -13,21 +13,22 @@ if not os.path.exists('logs'):
 app = Flask(__name__)
 
 # Load configuration
-env = os.environ.get('FLASK_ENV', 'development')
+env = os.environ.get('FLASK_ENV', 'production')  # Default to production
 app.config.from_object(config[env])
 
 # Configure logging
-if not app.debug and not os.path.exists('logs'):
-    os.mkdir('logs')
+if not app.debug:
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
     
-handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
-handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-))
-handler.setLevel(logging.INFO)
-app.logger.addHandler(handler)
-app.logger.setLevel(logging.INFO)
-app.logger.info('Application startup')
+    handler = RotatingFileHandler('logs/app.log', maxBytes=10240, backupCount=10)
+    handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    handler.setLevel(logging.INFO)
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('Application startup')
 
 # Initialize extensions
 db.init_app(app)
@@ -41,7 +42,11 @@ from models import User, Wing, Quiz, Question, QuizResponse, QuizAnswer, Learnin
 
 @login_manager.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    try:
+        return User.query.get(int(id))
+    except Exception as e:
+        app.logger.error(f"Error loading user: {str(e)}")
+        return None
 
 def init_db():
     with app.app_context():
